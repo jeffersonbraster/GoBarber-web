@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FiLogIn, FiMail } from 'react-icons/fi';
 import * as Yup from 'yup';
 import { FormHandles } from '@unform/core';
@@ -52,8 +52,6 @@ const ForgotPassword: React.FC = () => {
           description:
             'Verifique sua caixa de entrada para prosseguir com a recuperação.',
         });
-
-        // history.push('/dashboard');
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationsErrors(err);
