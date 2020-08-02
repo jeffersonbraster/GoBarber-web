@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { FiLogIn, FiMail } from 'react-icons/fi';
 import * as Yup from 'yup';
@@ -10,6 +10,7 @@ import { Container, Content, Background, AnimationContainer } from './styles';
 import logoImg from '../../assets/logo.svg';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import api from '../../services/api';
 
 interface ForgotPasswordFormData {
   email: string;
@@ -19,12 +20,15 @@ interface ForgotPasswordFormData {
 const ForgotPassword: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
 
+  const [loading, setLoading] = useState(false);
   const { addToast } = useToast();
   // const history = useHistory();
 
   const handleSubmit = useCallback(
     async (data: ForgotPasswordFormData) => {
       try {
+        setLoading(true);
+
         formRef.current?.setErrors({});
         const schema = Yup.object().shape({
           email: Yup.string()
@@ -37,6 +41,17 @@ const ForgotPassword: React.FC = () => {
         });
 
         // recuperação de senha
+
+        await api.post('/password/forgot', {
+          email: data.email,
+        });
+
+        addToast({
+          type: 'success',
+          title: 'E-mail de recuperação enviado.',
+          description:
+            'Verifique sua caixa de entrada para prosseguir com a recuperação.',
+        });
 
         // history.push('/dashboard');
       } catch (err) {
@@ -52,6 +67,8 @@ const ForgotPassword: React.FC = () => {
           description:
             'Ocorreu um erro ao a recuperação de senha, verifique os dados.',
         });
+      } finally {
+        setLoading(false);
       }
     },
     [addToast],
@@ -73,7 +90,9 @@ const ForgotPassword: React.FC = () => {
               placeholder="E-mail"
             />
 
-            <Button type="submit">Recuperar</Button>
+            <Button loading={loading} type="submit">
+              Recuperar
+            </Button>
           </Form>
 
           <Link to="/signin">
