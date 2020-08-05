@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { isToday, format } from 'date-fns';
+import ptBR from 'date-fns/locale/pt-BR';
 import DayPicker, { DayModifiers } from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
 
@@ -24,6 +26,15 @@ interface MonthAvailabilityItem {
   available: boolean;
 }
 
+interface Appointments {
+  id: string;
+  date: string;
+  user: {
+    name: string;
+    avatar_url: string;
+  };
+}
+
 const Dashboard: React.FC = () => {
   const { signOut, user } = useAuth();
   const [selectDate, setSelectDate] = useState(new Date());
@@ -43,6 +54,8 @@ const Dashboard: React.FC = () => {
     setCurrentMonth(month);
   }, []);
 
+  const [appointments, setAppointments] = useState<Appointments[]>([]);
+
   useEffect(() => {
     api
       .get(`/providers/${user.id}/month-availability`, {
@@ -56,6 +69,20 @@ const Dashboard: React.FC = () => {
       });
   }, [currentMonth, user.id]);
 
+  useEffect(() => {
+    api
+      .get('/appointments/me', {
+        params: {
+          year: selectDate.getFullYear(),
+          month: selectDate.getMonth() + 1,
+          day: selectDate.getDate(),
+        },
+      })
+      .then(response => {
+        setAppointments(response.data);
+      });
+  }, [selectDate]);
+
   const disabledDays = useMemo(() => {
     const dates = monthAvailability
       .filter(monthDay => monthDay.available === false)
@@ -68,6 +95,16 @@ const Dashboard: React.FC = () => {
 
     return dates;
   }, [currentMonth, monthAvailability]);
+
+  const selectedDateAsText = useMemo(() => {
+    return format(selectDate, "'Dia' dd 'de' MMMM", {
+      locale: ptBR,
+    });
+  }, [selectDate]);
+
+  const selectedWeekDay = useMemo(() => {
+    return format(selectDate, 'cccc', { locale: ptBR });
+  }, [selectDate]);
 
   return (
     <Container>
@@ -93,9 +130,9 @@ const Dashboard: React.FC = () => {
         <Schedule>
           <h1>Horários agendados:</h1>
           <p>
-            <span>Hoje</span>
-            <span>Dia 6</span>
-            <span>Segunda-feira</span>
+            {isToday(selectDate) && <span>Hoje</span>}
+            <span>{selectedDateAsText}</span>
+            <span>{selectedWeekDay}</span>
           </p>
 
           <NextAppointment>
